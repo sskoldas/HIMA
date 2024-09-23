@@ -129,36 +129,29 @@ microHIMA <- function(X,
   
   message("Step 2: Closted testing-based procedure ...", "     (", format(Sys.time(), "%X"), ")")
   
-  ## The FDR method
-  set <- which(P_adj_DLASSO < FDRcut)
-  hom <- hommel::hommel(P_adj_DLASSO, simes = FALSE)
-  N1 <- hommel::discoveries(hom, set, incremental = TRUE, alpha=0.05)
+  ## The FDR method using Benjamini-Hochberg
+  P_adj_BH <- p.adjust(P_adj_DLASSO, method = "BH")
   
-  if (length(set) > 0){
-    L <- length(set)
-    N2 <- matrix(0,1,L)
-    N2[2:L] <- N1[1:(L-1)]
-  }
+  ID_FDR <- which(P_adj_BH < FDRcut)
   
-  N0 <- N1 - N2
-  
-  ID_FDR <- set[which(N0 > 0)]
-  
-  IDE <- alpha_EST[ID_FDR] * beta_EST[ID_FDR]
-  
-  if (length(ID_FDR) > 0){
-    out_result <- data.frame(Index = M_ID_name[ID_FDR], 
-                             alpha_hat = alpha_EST[ID_FDR], 
-                             alpha_se = alpha_SE[ID_FDR], 
-                             beta_hat = beta_EST[ID_FDR], 
-                             beta_se = beta_SE[ID_FDR],
-                             IDE = IDE, 
-                             rimp = abs(IDE)/sum(abs(IDE)) * 100, 
-                             pmax = P_adj_DLASSO[ID_FDR])
-    if(verbose) message(paste0("        ", length(ID_FDR), " significant mediator(s) identified."))
+  if (length(ID_FDR) > 0) {
+    IDE <- alpha_EST[ID_FDR] * beta_EST[ID_FDR]
+    
+    out_result <- data.frame(
+      Index = M_ID_name[ID_FDR],
+      alpha_hat = alpha_EST[ID_FDR],
+      alpha_se = alpha_SE[ID_FDR],
+      beta_hat = beta_EST[ID_FDR],
+      beta_se = beta_SE[ID_FDR],
+      IDE = IDE,
+      rimp = abs(IDE) / sum(abs(IDE)) * 100,
+      p_adjust = P_adj_BH[ID_FDR]
+    )
+    
+    if (verbose) message(paste0("        ", length(ID_FDR), " significant mediator(s) identified."))
   } else {
-    if(verbose) message("        No significant mediator identified.")
-    out_result = NULL
+    if (verbose) message("        No significant mediator identified.")
+    out_result <- NULL
   }
   
   message("Done!", "     (", format(Sys.time(), "%X"), ")")
