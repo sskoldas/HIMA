@@ -132,7 +132,7 @@ microHIMA <- function(X,
   ## The FDR method using Benjamini-Hochberg
   P_adj_BH <- p.adjust(P_adj_DLASSO, method = "BH")
   
-  ID_FDR <- which(P_adj_BH < FDRcut)
+  ID_FDR <- which(P_adj_DLASSO < FDRcut)
   
   if (length(ID_FDR) > 0) {
     IDE <- alpha_EST[ID_FDR] * beta_EST[ID_FDR]
@@ -145,6 +145,7 @@ microHIMA <- function(X,
       beta_se = beta_SE[ID_FDR],
       IDE = IDE,
       rimp = abs(IDE) / sum(abs(IDE)) * 100,
+      p_raw = P_adj_DLASSO[ID_FDR],
       p_adjust = P_adj_BH[ID_FDR]
     )
     
